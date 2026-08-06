@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from sglang.srt.environ import envs
 from sglang.srt.managers.scheduler import Scheduler
+from sglang.srt.runtime_context import get_context
 from sglang.test.ci.ci_register import register_cpu_ci
 
 register_cpu_ci(est_time=1, suite="base-a-test-cpu")
@@ -35,6 +36,13 @@ class TestSchedulerInitReqMaxNewTokens(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls._scheduler_logger.setLevel(cls._old_level)
+
+    def setUp(self):
+        # The DCP size comes from the process config, so a scheduler double
+        # needs one published rather than an attribute of its own.
+        override = get_context().override_server_args(dcp_size=1)
+        override.install()
+        self.addCleanup(override.restore)
 
     def _new_scheduler(
         self,
